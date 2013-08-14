@@ -24,7 +24,8 @@ module.exports = function(grunt) {
     var options = this.options({
       separator: grunt.util.linefeed,
       sourceRoot: '',
-      sourcesContent: false
+      sourcesContent: false,
+      sourceMapRoot: '',
     });
 
     // Iterate over all src-dest file pairs.
@@ -54,12 +55,15 @@ module.exports = function(grunt) {
         }
         childNodeChunks.map(function(line) {
           if (/\/\/@\s+sourceMappingURL=(.+)/.test(line)) {
-            var sourceMapPath = filename.replace(/[^\/]*$/, RegExp.$1);
+            var sourceMapPath = filename.replace(
+              /[^\/]*$/, RegExp.$1.replace(options.sourceMapRoot, ''));
             var sourceMap = JSON.parse(grunt.file.read(sourceMapPath));
             sourceMap.file = filename;
-            var sourceRoot = path.resolve(path.dirname(filename), sourceMap.sourceRoot);
+            var sourceRoot = path.resolve(
+              path.dirname(filename),
+              (sourceMap.sourceRoot || '').replace(options.sourceMapRoot, '') || '.');
             sourceMap.sources = sourceMap.sources.map(function(source){
-              return path.relative(process.cwd(), path.join(sourceRoot, source));
+              return path.relative(path.join(process.cwd(), path.dirname(sourceMap.file)), path.join(sourceRoot, source));
             });
             delete sourceMap.sourceRoot;
             sourceMaps.push(sourceMap);
@@ -76,7 +80,7 @@ module.exports = function(grunt) {
       }
 
       var mapfilepath = f.dest.split('/').pop() + '.map';
-      sourceNode.add('//@ sourceMappingURL=' + mapfilepath);
+      sourceNode.add('//@ sourceMappingURL=' + options.sourceMapRoot + mapfilepath + '\n');
 
       var code_map = sourceNode.toStringWithSourceMap({
         file: f.dest,
