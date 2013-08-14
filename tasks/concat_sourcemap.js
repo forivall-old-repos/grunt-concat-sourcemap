@@ -25,7 +25,7 @@ module.exports = function(grunt) {
       separator: grunt.util.linefeed,
       sourceRoot: '',
       sourcesContent: false,
-      sourceMapRoot: '',
+      sourceMapRoot: ''
     });
 
     // Iterate over all src-dest file pairs.
